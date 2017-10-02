@@ -1,75 +1,53 @@
 version: '3'
 
 services:
+  microservice.trellomonitor:
+    image: trellomon/trellomonitor
+    build:
+      context: ./Microservice.SplunkReporter
+      dockerfile: Dockerfile
+    ports:
+     - "8001:80"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      TPS_DB_CONNECTION_STRING: Server=db;Database=TestAppDb;User Id=sa;Password=TestApp123456;
+
+  microservice.splunkreporter:
+    image: trellomon/splunkreporter
+    build:
+      context: ./Microservice.SplunkReporter
+      dockerfile: Dockerfile
+    ports:
+      - "8002:80"
+    
+  microservice.eventhub:
+    image: trellomon/trellomonitor
+    build:
+      context: ./Microservice.SplunkReporter
+      dockerfile: Dockerfile
+    ports:
+     - "8003:80"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      TPS_DB_CONNECTION_STRING: Server=db;Database=TestAppDb;User Id=sa;Password=TestApp123456;
+
   db:
    image: microsoft/mssql-server-linux:latest
    environment:
     - ACCEPT_EULA=Y
     - SA_PASSWORD=TestApp123456
    ports:
-    - "127.0.0.1:1436:1436"
-   networks:
-     - leader
-
-  trellomonitor:
-    image: trellomon/trellomonitor:25
-    ports:
-     - "127.0.0.1:8001:80"
-    depends_on:
-     - db
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      TPS_DB_CONNECTION_STRING: Server=db;Database=TestAppDb;User Id=sa;Password=TestApp123456;
-    networks:
-     - worker1
-
-  splunkreporter:
-    image: trellomon/splunkreporter:24
-    depends_on:
-     - db
-    ports:
-      - "127.0.0.1:16667:80"
-    networks:
-     - worker2
-    
-  eventhub:
-    image: trellomon/eventhub:23
-    ports:
-     - "127.0.0.1:16666:80"
-    depends_on:
-     - db
-    environment:
-      ASPNETCORE_ENVIRONMENT: Subsys
-      TPS_DB_CONNECTION_STRING: Server=db;Database=TestAppDb;User Id=sa;Password=TestApp123456;
-    networks:
-     - worker1
+    - "2511:1436"
 
   splunkenterprise:
    hostname: splunkenterprise
-   image: splunk/splunk:latest
+   image: splunk/splunk:6.6.3
    environment:
      SPLUNK_START_ARGS: --accept-license --answer-yes
      SPLUNK_ENABLE_LISTEN: 9997
      SPLUNK_ADD: tcp 1514
    ports:
-     - "127.0.0.1:8000:8000"
-     - "127.0.0.1:9997:9997"
-     - "127.0.0.1:8088:8088"
-     - "127.0.0.1:1514:1514"
-   networks:
-     - worker2
-
-  visualizer:
-   image: dockersamples/visualizer:stable
-   ports:
-     - "127.0.0.1:8080:8080"
-   stop_grace_period: 1m30s
-   volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-   networks:
-    - leader
-
-networks:
-  leader:
-  worker1:
-  worker2:
+     - "8000:8000"
+     - "9997:9997"
+     - "8088:8088"
+     - "1514:1514"
