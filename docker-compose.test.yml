@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  microservice.trellomonitor:
+    image: trellomon/trellomonitor
+    build:
+      context: ./Microservice.SplunkReporter
+      dockerfile: Dockerfile
+    ports:
+     - "8001:80"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      TPS_DB_CONNECTION_STRING: Server=db;Database=TestAppDb;User Id=sa;Password=TestApp123456;
+
+  microservice.splunkreporter:
+    image: trellomon/splunkreporter
+    build:
+      context: ./Microservice.SplunkReporter
+      dockerfile: Dockerfile
+    ports:
+      - "8002:80"
+    
+  microservice.eventhub:
+    image: trellomon/trellomonitor
+    build:
+      context: ./Microservice.SplunkReporter
+      dockerfile: Dockerfile
+    ports:
+     - "8003:80"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      TPS_DB_CONNECTION_STRING: Server=db;Database=TestAppDb;User Id=sa;Password=TestApp123456;
+
+  db:
+   image: microsoft/mssql-server-linux:latest
+   environment:
+    - ACCEPT_EULA=Y
+    - SA_PASSWORD=TestApp123456
+   ports:
+    - "2511:1436"
+
+  splunkenterprise:
+   hostname: splunkenterprise
+   image: splunk/splunk:6.6.3
+   environment:
+     SPLUNK_START_ARGS: --accept-license --answer-yes
+     SPLUNK_ENABLE_LISTEN: 9997
+     SPLUNK_ADD: tcp 1514
+   ports:
+     - "8000:8000"
+     - "9997:9997"
+     - "8088:8088"
+     - "1514:1514"
