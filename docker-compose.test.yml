@@ -2,18 +2,15 @@ version: '3'
 
 services:
   microservice.trellomonitor:
-    image: trellomon/trellomonitor
+    image: trellomon/trellomonitor:67
     build:
       context: ./Microservice.SplunkReporter
       dockerfile: Dockerfile
     ports:
      - "8001:80"
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      TPS_DB_CONNECTION_STRING: Server=db;Database=TestAppDb;User Id=sa;Password=TestApp123456;
 
   microservice.splunkreporter:
-    image: trellomon/splunkreporter
+    image: trellomon/splunkreporter:72
     build:
       context: ./Microservice.SplunkReporter
       dockerfile: Dockerfile
@@ -21,15 +18,12 @@ services:
       - "8002:80"
     
   microservice.eventhub:
-    image: trellomon/trellomonitor
+    image: trellomon/eventhub:70
     build:
       context: ./Microservice.SplunkReporter
       dockerfile: Dockerfile
     ports:
      - "8003:80"
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      TPS_DB_CONNECTION_STRING: Server=db;Database=TestAppDb;User Id=sa;Password=TestApp123456;
 
   db:
    image: microsoft/mssql-server-linux:latest
