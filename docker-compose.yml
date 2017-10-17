@@ -18,7 +18,6 @@ services:
       - "1477:1433"
 
   microservice.trellomonitor:
-    restart: on-failure:1
     image: trellomon/microservice.trellomonitor
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
@@ -32,7 +31,6 @@ services:
       - "16665:80"
 
   microservice.eventhub:
-    restart: on-failure:1
     image: trellomon/microservice.eventhub
     environment:
       - ASPNETCORE_ENVIRONMENT=production
@@ -45,7 +43,6 @@ services:
       - "16666:80"
 
   microservice.splunkreporter:
-    restart: on-failure:1
     image: trellomon/microservice.splunkreporter
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
