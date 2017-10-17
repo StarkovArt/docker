@@ -1,53 +1,77 @@
 version: '3'
 
+volumes:
+  opt-splunk-etc:
+  opt-splunk-var:
+  mssql-server-linux-data:
+
 services:
-  microservice.trellomonitor:
-    image: trellomon/trellomonitor
-    build:
-      context: ./Microservice.SplunkReporter
-      dockerfile: Dockerfile
-    ports:
-     - "8001:80"
+  db:
+    restart: on-failure:1
+    image: microsoft/mssql-server-linux:2017-latest
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      TPS_DB_CONNECTION_STRING: Server=db;Database=TestAppDb;User Id=sa;Password=TestApp123456;
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=TestApp123456
+    volumes:
+      - mssql-server-linux-data:/var/opt/mssql/data
+    ports:
+      - "1477:1433"
+
+  microservice.trellomonitor:
+    restart: on-failure:1
+    image: trellomon/microservice.trellomonitor
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - TRELLO_KEY=e78215bad47cb0091dffac2b421e3194
+      - TRELLO_TOKEN=e53afa10be3a3d8333b0bbca49eb707eb5636715e988b8711990a34dc564300c
+      - DB_CONNECTION_STRING=Server=db;Initial Catalog=TrelloMonitorDb;User Id=sa;Password=TestApp123456
+      - HTTP_EVENT_COLLECTOR_TOKEN=DFC4F4C1-AC3F-479E-B479-DEF28FBBF849
+    depends_on:
+      - db
+      - microservice.splunkreporter
+    ports:
+      - "16665:80"
+
+  microservice.eventhub:
+    restart: on-failure:1
+    image: trellomon/microservice.eventhub
+    environment:
+      - ASPNETCORE_ENVIRONMENT=production
+      - HTTP_EVENT_COLLECTOR_TOKEN=5C3B07E1-9CAC-47BF-AE76-3B0F29038AD8
+      - DB_CONNECTION_STRING=Server=db;Initial Catalog=EventHub;User Id=sa;Password=TestApp123456
+      - HANGFIRE_CONNECTION_STRING=Server=db;Initial Catalog=EventHubHangfireDb;User Id=sa;Password=TestApp123456
+    depends_on:
+      - db
+    ports:
+      - "16666:80"
 
   microservice.splunkreporter:
-    image: trellomon/splunkreporter
-    build:
-      context: ./Microservice.SplunkReporter
-      dockerfile: Dockerfile
-    ports:
-      - "8002:80"
-    
-  microservice.eventhub:
-    image: trellomon/trellomonitor
-    build:
-      context: ./Microservice.SplunkReporter
-      dockerfile: Dockerfile
-    ports:
-     - "8003:80"
+    restart: on-failure:1
+    image: trellomon/microservice.splunkreporter
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      TPS_DB_CONNECTION_STRING: Server=db;Database=TestAppDb;User Id=sa;Password=TestApp123456;
-
-  db:
-   image: microsoft/mssql-server-linux:latest
-   environment:
-    - ACCEPT_EULA=Y
-    - SA_PASSWORD=TestApp123456
-   ports:
-    - "2511:1436"
-
+      - ASPNETCORE_ENVIRONMENT=Production
+      - SPLUNK_LOGGER_TOKEN=F8DF882D-7A60-4E13-A42A-394AAECB9866
+      - SPLUNK_REPORT_TOKEN=765EB58B-9927-47BA-ACF5-62339918C690
+      - DB_CONNECTION_STRING=Server=db;Initial Catalog=SplunkReport;User Id=sa;Password=TestApp123456
+    depends_on:
+      - db
+      - splunkenterprise
+    ports:
+      - "16667:80"
+            
   splunkenterprise:
-   hostname: splunkenterprise
-   image: splunk/splunk:6.6.3
-   environment:
-     SPLUNK_START_ARGS: --accept-license --answer-yes
-     SPLUNK_ENABLE_LISTEN: 9997
-     SPLUNK_ADD: tcp 1514
-   ports:
-     - "8000:8000"
-     - "9997:9997"
-     - "8088:8088"
-     - "1514:1514"
+    hostname: splunkenterprise
+    restart: on-failure:1
+    image: splunk/splunk:6.6.3
+    environment:
+      SPLUNK_START_ARGS: --accept-license --answer-yes
+      SPLUNK_ENABLE_LISTEN: 9997
+      SPLUNK_ADD: tcp 1514
+    volumes:
+      - opt-splunk-etc:/opt/splunk/etc
+      - opt-splunk-var:/opt/splunk/var
+    ports:
+      - "8000:8000"
+      - "9997:9997"
+      - "8088:8088"
+      - "1514:1514"
