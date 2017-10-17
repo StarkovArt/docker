@@ -17,7 +17,7 @@ services:
     ports:
       - "1477:1433"
 
-  trellomonitor:
+  microservice.trellomonitor:
     restart: on-failure:1
     image: trellomon/microservice.trellomonitor
     environment:
@@ -31,7 +31,7 @@ services:
     ports:
       - "16665:80"
 
-  eventhub:
+  microservice.eventhub:
     restart: on-failure:1
     image: trellomon/microservice.eventhub
     environment:
@@ -44,7 +44,7 @@ services:
     ports:
       - "16666:80"
 
-  splunkreporter:
+  microservice.splunkreporter:
     restart: on-failure:1
     image: trellomon/microservice.splunkreporter
     environment:
