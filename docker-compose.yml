@@ -28,7 +28,6 @@ services:
       - HTTP_EVENT_COLLECTOR_TOKEN=DFC4F4C1-AC3F-479E-B479-DEF28FBBF849
     depends_on:
       - db
-      - microservice.splunkreporter
     ports:
       - "16665:80"
 
